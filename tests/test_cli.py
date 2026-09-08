@@ -1,3 +1,5 @@
+"""Check informational CLI commands without initializing agents."""
+
 import os
 from pathlib import Path
 import subprocess
@@ -10,7 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CliTests(unittest.TestCase):
+    """Keep the CLI lightweight and the public class import available."""
+
     def test_help_and_version_do_not_load_trading_agents(self):
+        """Help and version must work without trading-module imports."""
         code = """
 import importlib.abc
 import runpy
@@ -28,7 +33,12 @@ runpy.run_module("autohedge", run_name="__main__")
         env = {
             key: os.environ[key]
             for key in (
-                "PATH", "SYSTEMROOT", "TMP", "TEMP", "USERPROFILE", "HOME"
+                "PATH",
+                "SYSTEMROOT",
+                "TMP",
+                "TEMP",
+                "USERPROFILE",
+                "HOME",
             )
             if key in os.environ
         }
@@ -45,6 +55,7 @@ runpy.run_module("autohedge", run_name="__main__")
                         text=True,
                         encoding="utf-8",
                         timeout=10,
+                        check=False,
                     )
                     self.assertEqual(
                         result.returncode, 0, result.stderr
@@ -52,6 +63,7 @@ runpy.run_module("autohedge", run_name="__main__")
                     self.assertIn("autohedge", result.stdout.lower())
 
     def test_public_class_import_is_preserved(self):
+        """The package must still expose the lazily imported class."""
         code = """
 import sys
 import types
@@ -76,6 +88,7 @@ else:
             capture_output=True,
             text=True,
             timeout=10,
+            check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
